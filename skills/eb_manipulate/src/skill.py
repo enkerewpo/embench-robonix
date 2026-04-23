@@ -56,7 +56,9 @@ def close_(receptacle: str) -> dict:
 
 
 def _serve_mcp(port: int) -> None:
-    _mcp.run(transport="streamable-http", host="127.0.0.1", port=port)
+    _mcp.settings.host = "127.0.0.1"
+    _mcp.settings.port = port
+    _mcp.run(transport="streamable-http")
 
 
 def main() -> None:
@@ -75,6 +77,7 @@ def main() -> None:
             {"name": "close_", "description": "Close a reachable articulated receptacle (EB-Habitat).", "path": str(_CAPABILITY_MD)},
         ],
         contract_id="robonix/skill/embench/manipulate/tools",
+        mcp_instance=_mcp,
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_manipulate")
 

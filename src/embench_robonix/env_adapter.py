@@ -78,16 +78,34 @@ class EBHabitatAdapter:
 
     # ── action lookup helpers ─────────────────────────────────────────────
     def _skill_index_for(self, op: str, target: str) -> int | None:
-        """Find the skill index whose name matches (op, target)."""
-        target = target.lower().strip()
-        for i, (name, args) in enumerate(self._skills):
-            if op in name:
-                # args is list of string object handles; match on containment
-                if target in " ".join(args).lower() or target in name.lower():
-                    return i
-                if op in ("open", "close") and target in name.lower():
-                    return i
-        return None
+        """Match (op, VLM-natural-language-target) against EB-Habitat's 70 skills.
+
+        VLM emits free-form args like "table 1", "kitchen counter", "refrigerator".
+        Each Habitat skill has (internal_name, [object_handle]) plus a
+        human-readable entry in ``language_skill_set`` — we match on that.
+
+        op: "nav" | "pick" | "place" | "open" | "close"
+        """
+        op_verb = {"nav": "navigate to", "pick": "pick up",
+                   "place": "place at", "open": "open the",
+                   "close": "close the"}.get(op, op)
+        t = target.lower().strip()
+        # normalise target: "left counter" / "counter left" both ok
+        t_tokens = [w for w in t.replace("_", " ").split() if w]
+
+        def score(phrase: str) -> int:
+            p = phrase.lower()
+            if op_verb not in p:
+                return -1
+            # partial: every token from target must appear
+            return sum(1 for w in t_tokens if w in p)
+
+        best_i, best_s = None, 0
+        for i, phrase in enumerate(self._language_skills):
+            s = score(phrase)
+            if s > best_s:
+                best_s, best_i = s, i
+        return best_i if best_s >= max(1, len(t_tokens) - 1) else None
 
     def _step(self, op: str, target: str) -> dict:
         if self._reset_needed:
@@ -111,14 +129,53 @@ class EBHabitatAdapter:
 
     # ── RPC methods ──────────────────────────────────────────────────────
     def describe_scene(self) -> dict:
-        """Return the skill list + instruction + held state. Free, no step."""
+        """Return a world-model snapshot: receptacles, pickables, state,
+        and the exact natural-language phrases accepted by each skill so
+        the planner can choose grounded targets.
+
+        Free call — no env step consumed.
+        """
+        # Derive sets from the skill table (names like "nav_table_0", args
+        # like ["table_0_0"]). language_skill_set gives the planner-facing
+        # phrase ("navigate to the table 1" etc.).
+        receptacles: list[str] = []
+        pickables: list[str] = []
+        nav_targets: set[str] = set()
+        pick_targets: set[str] = set()
+        place_targets: set[str] = set()
+        open_targets: set[str] = set()
+        close_targets: set[str] = set()
+        for (name, _args), phrase in zip(self._skills, self._language_skills):
+            if name.startswith("nav"):
+                rec = phrase.replace("navigate to the ", "").strip()
+                nav_targets.add(rec)
+                receptacles.append(rec)
+            elif name.startswith("pick"):
+                obj = phrase.replace("pick up the ", "").strip()
+                pick_targets.add(obj)
+                pickables.append(obj)
+            elif name.startswith("place"):
+                place_targets.add(phrase.replace("place at the ", "").strip())
+            elif name.startswith("open"):
+                open_targets.add(phrase.replace("open the ", "").strip())
+            elif name.startswith("close"):
+                close_targets.add(phrase.replace("close the ", "").strip())
+
         return {
             "success": True,
             "step": int(self._env._current_step),
             "instruction": self._env.episode_language_instruction,
-            "skills": self._language_skills,
             "holding": self._holding,
             "agent_near": self._near,
+            "receptacles": sorted(set(receptacles)),
+            "pickable_objects": sorted(set(pickables)),
+            "valid_targets": {
+                "navigate": sorted(nav_targets),
+                "pick": sorted(pick_targets),
+                "place": sorted(place_targets),
+                "open": sorted(open_targets),
+                "close": sorted(close_targets),
+            },
         }
 
     def navigate(self, target: str) -> dict:

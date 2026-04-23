@@ -78,31 +78,57 @@ def _submit_task_to_pilot(pilot_addr: str, instruction: str,
     t0 = time.perf_counter()
 
     # event_kind: 1=text_chunk 2=task_graph 3=batch_result 4=status 5=final_text
+    graphs: list[list[dict]] = []  # one per emitted TaskGraph, list of ToolCall
     try:
         for ev in stub.Stream(task, timeout=timeout_s):
             kind = int(ev.event_kind)
-            events.append({"kind": kind, "session_id": ev.session_id})
-            if kind == 5:  # final_text
-                final_text = ev.final_text
-                events[-1]["final_text"] = final_text
+            row: dict = {"kind": kind, "session_id": ev.session_id}
+            if kind == 1:  # text_chunk — planner's free text (reasoning, etc.)
+                if ev.text_chunk:
+                    row["text"] = ev.text_chunk
+            elif kind == 2:  # task_graph
+                calls = []
+                for c in ev.task_graph.calls:
+                    calls.append({
+                        "call_id": c.call_id,
+                        "tool_name": c.tool_name,
+                        "args_json": c.args_json,
+                    })
+                row["graph_id"] = ev.task_graph.graph_id
+                row["round"] = int(ev.task_graph.round)
+                row["calls"] = calls
+                graphs.append(calls)
             elif kind == 3:  # batch_result
                 turn_count += 1
-                events[-1]["batch_ok"] = not ev.batch_result.any_failed
+                br = ev.batch_result
+                row["batch_ok"] = not br.any_failed
+                row["round"] = int(br.round)
+                row["results"] = [
+                    {"call_id": r.call_id, "tool_name": r.tool_name,
+                     "success": r.success, "output": r.output[:400], "error": r.error[:200]}
+                    for r in br.results
+                ]
             elif kind == 4:  # status
-                events[-1]["state"] = int(ev.status.state)
-                events[-1]["msg"] = ev.status.message
-                # state enum: 0=unknown 1=running 2=done 3=aborted ... treat >=2 as terminal
+                row["state"] = int(ev.status.state)
+                row["msg"] = ev.status.message
+                events.append(row)
                 if int(ev.status.state) >= 2:
                     break
+                continue
+            elif kind == 5:  # final_text
+                final_text = ev.final_text
+                row["final_text"] = final_text
+            events.append(row)
             if turn_count >= max_turns:
                 break
     except grpc.RpcError as e:
         return {"pilot_ok": False, "error": str(e),
-                "events": events, "final_text": final_text,
+                "events": events, "graphs": graphs, "final_text": final_text,
                 "turns": turn_count, "wall_s": time.perf_counter() - t0}
 
-    return {"pilot_ok": True, "events": events, "final_text": final_text,
-            "turns": turn_count, "wall_s": time.perf_counter() - t0}
+    return {"pilot_ok": True, "events": events, "graphs": graphs,
+            "final_text": final_text, "turns": turn_count,
+            "wall_s": time.perf_counter() - t0}
 
 
 def run_one_task(task: dict, env_sock: str, pilot_addr: str,
@@ -157,7 +183,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--env-sock", default=os.environ.get("EMBENCH_ENV_SOCKET", "/tmp/embench.sock"))
     ap.add_argument("--pilot-addr", default=os.environ.get("ROBONIX_PILOT_ADDR", "127.0.0.1:50052"))
-    ap.add_argument("--max-turns", type=int, default=10)
+    ap.add_argument("--max-turns", type=int, default=15)
     ap.add_argument("--timeout-s", type=float, default=180.0)
     args = ap.parse_args()
 

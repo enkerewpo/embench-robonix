@@ -33,11 +33,6 @@ SKILL_VENV="$HERE/.venv"
 
 mkdir -p "$OUT_DIR"
 
-# Regen proto stubs into proto_gen/ if missing (use skill venv which has grpcio-tools)
-if [ ! -f "$HERE/proto_gen/robonix_runtime_pb2.py" ]; then
-  echo "[run_phase_a] proto_gen/ empty — copy from a robonix package for now"
-  echo "[run_phase_a] (upstream: rust/examples/packages/maniskill_vla_demo/proto_gen/)"
-fi
 
 # Compose PYTHONPATH (same for every process)
 export PYTHONPATH="$HERE/src:$HERE/proto_gen:${PYTHONPATH:-}"
@@ -60,14 +55,21 @@ trap cleanup EXIT INT TERM
 
 SKILL_PY="$SKILL_VENV/bin/python"
 
+# Always regen proto stubs (rsync deploys may have shipped stale ones).
+( cd "$HERE" && PATH="$SKILL_VENV/bin:$PATH" bash scripts/codegen.sh >/dev/null 2>&1 ) \
+  || echo "[run_phase_a] codegen warning — proto_gen may be stale"
+
 # VLM credentials — single source of truth is the deploy manifest's
 # system.pilot section (vlm_base_url / vlm_api_key / vlm_api_format /
-# vlm_model). Until the pilot-reads-manifest refactor lands, we read them
-# from env vars here and fan out to each consumer (vlm_service reads
-# VLM_*, pilot reads ROBONIX_VLM_* — same values).
-: "${VLM_API_KEY:=${OPENAI_API_KEY:?OPENAI_API_KEY or VLM_API_KEY must be set — this IS the manifest pilot.vlm_api_key value}}"
-: "${VLM_BASE_URL:=${OPENAI_BASE_URL:-https://api.openai.com/v1}}"
-: "${VLM_MODEL:=${OPENAI_MODEL:-gpt-4o-mini}}"
+# vlm_model). Until the pilot-reads-manifest refactor lands, we source a
+# .env file next to this repo and fan out to each consumer (vlm_service
+# reads VLM_*, pilot reads ROBONIX_VLM_* — same values).
+if [ -f "$HERE/.env" ]; then
+  set -a; source "$HERE/.env"; set +a
+fi
+: "${VLM_API_KEY:?VLM_API_KEY required — set in $HERE/.env (value of manifest pilot.vlm_api_key)}"
+: "${VLM_BASE_URL:=https://api.openai.com/v1}"
+: "${VLM_MODEL:=gpt-4o-mini}"
 : "${VLM_MESSAGE_FORMAT:=openai}"
 export VLM_API_KEY VLM_BASE_URL VLM_MODEL VLM_MESSAGE_FORMAT
 

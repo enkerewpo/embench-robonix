@@ -29,14 +29,31 @@ _mcp = FastMCP("eb_observe")
 
 @_mcp.tool()
 def describe_scene() -> dict:
-    """Return the current scene snapshot (receptacles, pickables, agent state).
-    Free call: does NOT advance the episode.
+    """Return the world-model snapshot for the current EB-Habitat episode.
+
+    CALL THIS FIRST before any navigate/pick/place/open/close. The returned
+    `valid_targets` dict lists the EXACT phrases each tool accepts for this
+    scene; any other string will fail.
+
+    Returns:
+      instruction       natural-language task goal
+      receptacles       receptacle names (navigate targets)
+      pickable_objects  pickable object names (pick targets)
+      valid_targets     {navigate, pick, place, open, close} → list of the
+                        only accepted phrases for that action this scene
+      holding           currently held object or null
+      agent_near        receptacle the agent is next to or null
+      step              episode step counter
+
+    Free call — does NOT advance the episode.
     """
     return _env.call("describe_scene", {})
 
 
 def _serve_mcp(port: int) -> None:
-    _mcp.run(transport="streamable-http", host="127.0.0.1", port=port)
+    _mcp.settings.host = "127.0.0.1"
+    _mcp.settings.port = port
+    _mcp.run(transport="streamable-http")
 
 
 def main() -> None:
@@ -55,6 +72,7 @@ def main() -> None:
             "metadata": {"disable_model_invocation": False, "free_call": True},
         }],
         contract_id="robonix/skill/embench/observe/tools",
+        mcp_instance=_mcp,
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_observe")
 

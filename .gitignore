@@ -41,5 +41,7 @@ proto_gen/*_pb2_grpc.py
 .idea/
 .vscode/
 *.swp
+# API credentials live in .env (value of manifest pilot.vlm_api_key etc.) —
+# never commit.
 .env
 .env.local

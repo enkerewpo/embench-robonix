@@ -47,7 +47,9 @@ def navigate(target: str) -> dict:
 
 def _serve_mcp(port: int) -> None:
     # fastmcp defaults to stdio; switch to HTTP so atlas-registered port matches.
-    _mcp.run(transport="streamable-http", host="127.0.0.1", port=port)
+    _mcp.settings.host = "127.0.0.1"
+    _mcp.settings.port = port
+    _mcp.run(transport="streamable-http")
 
 
 def main() -> None:
@@ -68,6 +70,7 @@ def main() -> None:
             "metadata": {"tool": "navigate", "env": "eb_habitat"},
         }],
         contract_id="robonix/skill/embench/navigate/tools",
+        mcp_instance=_mcp,
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_navigate")
 
