@@ -164,6 +164,7 @@ class EBHabitatAdapter:
         return {
             "success": True,
             "step": int(self._env._current_step),
+            "task_success": bool(self._task_success),
             "instruction": self._env.episode_language_instruction,
             "holding": self._holding,
             "agent_near": self._near,
