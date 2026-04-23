@@ -59,7 +59,7 @@ def main() -> None:
 
     stub = register(
         node_id="com.embench_robonix.skl.eb_navigate",
-        capability_namespace="embench/skill",
+        capability_namespace="robonix/skill/embench",
         mcp_port=mcp_port,
         skills=[{
             "name": "navigate",
@@ -67,7 +67,7 @@ def main() -> None:
             "path": str(_CAPABILITY_MD),
             "metadata": {"tool": "navigate", "env": "eb_habitat"},
         }],
-        contract_id="embench/skill/navigate/tools",
+        contract_id="robonix/skill/embench/navigate/tools",
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_navigate")
 

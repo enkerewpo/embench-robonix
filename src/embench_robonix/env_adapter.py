@@ -49,15 +49,18 @@ class EBHabitatAdapter:
 
     # ── episode lifecycle ─────────────────────────────────────────────────
     def reset(self, episode_id: int | None = None) -> dict:
-        # EBHabEnv iterates episodes internally; we honor an explicit target by
-        # calling reset() repeatedly until we hit the requested index.
+        """Advance to the next episode (or the requested one by skipping forward).
+
+        EBHabEnv iterates its dataset sequentially; we do NOT re-initialize on
+        backwards jumps (that requires tearing down the Habitat sim and
+        crashes the shared EGL context). Caller should run tasks in
+        monotonically increasing episode_id.
+        """
         if episode_id is not None:
-            # If requested index is behind current, re-init env (cheap-ish)
             if episode_id < self._env._current_episode_num:
-                log.warning("reset to earlier episode %d (current %d) — re-init",
+                log.warning("requested episode %d < current %d — skipping "
+                            "(backwards reset not supported)",
                             episode_id, self._env._current_episode_num)
-                type(self).__init__(self,
-                                    eval_set=self._env._current_episode_num and "base" or "base")
             while self._env._current_episode_num < episode_id:
                 self._env.reset()
         self._env.reset()
@@ -186,7 +189,10 @@ def serve(sock_path: str) -> None:
 
     if os.path.exists(sock_path):
         os.remove(sock_path)
-    with socketserver.ThreadingUnixStreamServer(sock_path, _Handler) as srv:
+    # Non-threading: Habitat-sim's OpenGL/EGL context is bound to the thread
+    # that created the env, so all env.step calls MUST run on that thread.
+    # Sequential handling is fine — skill calls are low-frequency anyway.
+    with socketserver.UnixStreamServer(sock_path, _Handler) as srv:
         os.chmod(sock_path, 0o600)
         log.info("env adapter serving at %s (eval_set=%s)", sock_path, eval_set)
         srv.serve_forever()

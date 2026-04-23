@@ -46,7 +46,7 @@ def main() -> None:
 
     stub = register(
         node_id="com.embench_robonix.skl.eb_observe",
-        capability_namespace="embench/skill",
+        capability_namespace="robonix/skill/embench",
         mcp_port=mcp_port,
         skills=[{
             "name": "describe_scene",
@@ -54,7 +54,7 @@ def main() -> None:
             "path": str(_CAPABILITY_MD),
             "metadata": {"disable_model_invocation": False, "free_call": True},
         }],
-        contract_id="embench/skill/observe/tools",
+        contract_id="robonix/skill/embench/observe/tools",
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_observe")
 

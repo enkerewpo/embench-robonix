@@ -66,7 +66,7 @@ def main() -> None:
 
     stub = register(
         node_id="com.embench_robonix.skl.eb_manipulate",
-        capability_namespace="embench/skill",
+        capability_namespace="robonix/skill/embench",
         mcp_port=mcp_port,
         skills=[
             {"name": "pick", "description": "Pick up a named object from the active receptacle (EB-Habitat).", "path": str(_CAPABILITY_MD)},
@@ -74,7 +74,7 @@ def main() -> None:
             {"name": "open_", "description": "Open a reachable door/drawer/fridge (EB-Habitat).", "path": str(_CAPABILITY_MD)},
             {"name": "close_", "description": "Close a reachable articulated receptacle (EB-Habitat).", "path": str(_CAPABILITY_MD)},
         ],
-        contract_id="embench/skill/manipulate/tools",
+        contract_id="robonix/skill/embench/manipulate/tools",
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_manipulate")
 
