@@ -65,8 +65,18 @@ def main() -> None:
         mcp_port=mcp_port,
         skills=[{
             "name": "navigate",
-            "description": "Navigate to a receptacle in EB-Habitat (navigation action).",
+            "description": "Navigate to a receptacle (EB-Habitat). Target phrase must come from describe_scene().valid_targets.navigate.",
             "path": str(_CAPABILITY_MD),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "target": {
+                        "type": "string",
+                        "description": "Receptacle phrase from describe_scene().valid_targets.navigate (e.g. 'left counter in the kitchen')",
+                    },
+                },
+                "required": ["target"],
+            },
             "metadata": {"tool": "navigate", "env": "eb_habitat"},
         }],
         contract_id="robonix/skill/embench/navigate/tools",

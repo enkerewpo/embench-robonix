@@ -71,10 +71,55 @@ def main() -> None:
         capability_namespace="robonix/skill/embench",
         mcp_port=mcp_port,
         skills=[
-            {"name": "pick", "description": "Pick up a named object from the active receptacle (EB-Habitat).", "path": str(_CAPABILITY_MD)},
-            {"name": "place", "description": "Place held object on/in a reachable receptacle (EB-Habitat).", "path": str(_CAPABILITY_MD)},
-            {"name": "open_", "description": "Open a reachable door/drawer/fridge (EB-Habitat).", "path": str(_CAPABILITY_MD)},
-            {"name": "close_", "description": "Close a reachable articulated receptacle (EB-Habitat).", "path": str(_CAPABILITY_MD)},
+            {
+                "name": "pick",
+                "description": "Pick up an object from the receptacle the agent is next to (EB-Habitat). Must navigate first. `obj` from describe_scene().valid_targets.pick.",
+                "path": str(_CAPABILITY_MD),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "obj": {"type": "string", "description": "Object phrase from describe_scene().valid_targets.pick (e.g. 'pear', 'apple')."},
+                    },
+                    "required": ["obj"],
+                },
+            },
+            {
+                "name": "place",
+                "description": "Place currently-held object on/in a reachable receptacle (EB-Habitat). Must hold object first and stand at target receptacle.",
+                "path": str(_CAPABILITY_MD),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "obj": {"type": "string", "description": "Object being placed (currently held)."},
+                        "receptacle": {"type": "string", "description": "Receptacle phrase from describe_scene().valid_targets.place."},
+                    },
+                    "required": ["obj", "receptacle"],
+                },
+            },
+            {
+                "name": "open_",
+                "description": "Open a reachable door/drawer/fridge (EB-Habitat). Must navigate to it first.",
+                "path": str(_CAPABILITY_MD),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "receptacle": {"type": "string", "description": "Receptacle phrase from describe_scene().valid_targets.open."},
+                    },
+                    "required": ["receptacle"],
+                },
+            },
+            {
+                "name": "close_",
+                "description": "Close a reachable articulated receptacle (EB-Habitat). Must navigate to it first.",
+                "path": str(_CAPABILITY_MD),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "receptacle": {"type": "string", "description": "Receptacle phrase from describe_scene().valid_targets.close."},
+                    },
+                    "required": ["receptacle"],
+                },
+            },
         ],
         contract_id="robonix/skill/embench/manipulate/tools",
         mcp_instance=_mcp,
