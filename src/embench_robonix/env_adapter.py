@@ -1,23 +1,19 @@
-"""Env adapter — owns one EB-Habitat env instance and exposes its skill RPCs
-over a UNIX socket. Skill MCP servers talk to this adapter via EnvClient.
+"""Env adapter — owns ONE EB-Habitat env, serves skill RPCs over UNIX socket.
 
-Design invariant: exactly ONE env process for the whole Phase A run.
-Skill servers are stateless clients; they never instantiate Habitat.
+Skill MCP servers (eb_navigate / eb_manipulate / eb_observe) are stateless
+clients that talk to this adapter via :class:`embench_robonix.env_client.EnvClient`.
 
-Wire format: newline-delimited JSON. One request per line, one response
-per line. Request schema:
+Wire format: newline-delimited JSON.
+Request:  {"method": "<name>", "params": {...}}
+Response: {"success": bool, "step": int, ...method-specific extras}
 
-    {"method": "<name>", "params": {...}}
-
-Response schema:
-
-    {"success": bool, "step": int, ...per-method extras}
-
-This module is intentionally thin — the actual EB-Habitat binding (scene
-loading, action dispatch, success evaluation) goes into
-:class:`EBHabitatEnv` below. At Phase A start, the concrete hook-up to
-EmbodiedBench's ``eb_habitat`` package is TODO until that package is
-installed on rtx — see scripts/run_phase_a.sh for the startup sequence.
+Skill-name → discrete action-index mapping
+------------------------------------------
+EB-Habitat has 70 discrete actions (as of the `base` eval_set), each encoding
+a (skill, arg) pair: e.g. `nav_table_0` with arg `table_0_0`, `pick_apple_0`
+with arg `apple_0`, `open_fridge`, etc. The high-level MCP tools translate
+to these by picking the first action whose string form contains the given
+target. See :meth:`EBHabitatAdapter._skill_index_for`.
 """
 from __future__ import annotations
 
@@ -31,73 +27,125 @@ from typing import Any, Callable
 log = logging.getLogger("embench.env")
 
 
-class EBHabitatEnv:
-    """Wrapper around EmbodiedBench's EB-Habitat env.
+class EBHabitatAdapter:
+    """Wraps `embodiedbench.envs.eb_habitat.EBHabEnv`."""
 
-    TODO (2026-04-23): bind to EmbodiedBench's actual API once their
-    package is pip-installed on the rtx server. EmbodiedBench exposes an
-    env object with ``reset(task)``, ``step(action)``, ``get_obs()``, and
-    ``check_success()`` — mirror those here.
-    """
-
-    def __init__(self) -> None:
-        self._task = None
-        self._step = 0
-        self._held: str | None = None
+    def __init__(self, eval_set: str = "base", resolution: int = 256) -> None:
+        from embodiedbench.envs.eb_habitat.EBHabEnv import EBHabEnv
+        self._env = EBHabEnv(eval_set=eval_set,
+                             exp_name=os.environ.get("EMBENCH_EXP_NAME", "embench_robonix"),
+                             resolution=resolution,
+                             recording=False)
+        self._reset_needed = True
+        self._task_success = False
+        self._holding: str | None = None
         self._near: str | None = None
-        self._success = False
+        self._n_episodes = int(self._env.number_of_episodes)
+        # cache skill table for lookup
+        self._skills: list[tuple[str, list]] = list(self._env.skill_set)
+        self._language_skills: list[str] = list(self._env.language_skill_set)
+        log.info("EBHabEnv ready — %d episodes, %d skills",
+                 self._n_episodes, len(self._skills))
 
-    def reset(self, task_id: str) -> dict:
-        self._task = task_id
-        self._step = 0
-        self._held = None
+    # ── episode lifecycle ─────────────────────────────────────────────────
+    def reset(self, episode_id: int | None = None) -> dict:
+        # EBHabEnv iterates episodes internally; we honor an explicit target by
+        # calling reset() repeatedly until we hit the requested index.
+        if episode_id is not None:
+            # If requested index is behind current, re-init env (cheap-ish)
+            if episode_id < self._env._current_episode_num:
+                log.warning("reset to earlier episode %d (current %d) — re-init",
+                            episode_id, self._env._current_episode_num)
+                type(self).__init__(self,
+                                    eval_set=self._env._current_episode_num and "base" or "base")
+            while self._env._current_episode_num < episode_id:
+                self._env.reset()
+        self._env.reset()
+        self._reset_needed = False
+        self._task_success = False
+        self._holding = None
         self._near = None
-        self._success = False
-        # TODO: call EmbodiedBench env.reset(task_id=task_id)
-        return self._snapshot()
-
-    def describe_scene(self) -> dict:
-        # TODO: fetch receptacles / pickables / door states from habitat env
-        return self._snapshot()
-
-    def navigate(self, target: str) -> dict:
-        # TODO: env.step({"action": "navigation", "target": target})
-        self._near = target
-        self._step += 1
-        return self._snapshot()
-
-    def pick(self, obj: str) -> dict:
-        # TODO: env.step({"action": "pick", "obj": obj})
-        self._held = obj
-        self._step += 1
-        return self._snapshot()
-
-    def place(self, obj: str, receptacle: str) -> dict:
-        # TODO: env.step(...)
-        self._held = None
-        self._step += 1
-        return self._snapshot()
-
-    def open(self, receptacle: str) -> dict:
-        self._step += 1
-        return self._snapshot()
-
-    def close(self, receptacle: str) -> dict:
-        self._step += 1
-        return self._snapshot()
-
-    def _snapshot(self) -> dict:
         return {
             "success": True,
-            "step": self._step,
-            "holding": self._held,
-            "agent_near": self._near,
-            "task_success": self._success,
+            "episode_id": int(self._env._current_episode_num) - 1,
+            "instruction": self._env.episode_language_instruction,
+            "n_skills": len(self._skills),
+            "skills": self._language_skills,
         }
 
+    # ── action lookup helpers ─────────────────────────────────────────────
+    def _skill_index_for(self, op: str, target: str) -> int | None:
+        """Find the skill index whose name matches (op, target)."""
+        target = target.lower().strip()
+        for i, (name, args) in enumerate(self._skills):
+            if op in name:
+                # args is list of string object handles; match on containment
+                if target in " ".join(args).lower() or target in name.lower():
+                    return i
+                if op in ("open", "close") and target in name.lower():
+                    return i
+        return None
 
+    def _step(self, op: str, target: str) -> dict:
+        if self._reset_needed:
+            self._env.reset()
+            self._reset_needed = False
+        idx = self._skill_index_for(op, target)
+        if idx is None:
+            return {"success": False, "step": self._env._current_step,
+                    "error": f"no skill matching {op!r} target={target!r}"}
+        obs, reward, done, info = self._env.step(idx)
+        success = bool(info.get("task_success", False) or reward >= 1.0)
+        self._task_success = self._task_success or success
+        return {
+            "success": not info.get("was_prev_action_invalid", False),
+            "step": int(self._env._current_step),
+            "reward": float(reward),
+            "done": bool(done),
+            "task_success": bool(self._task_success),
+            "env_feedback": info.get("env_feedback") or info.get("action"),
+        }
+
+    # ── RPC methods ──────────────────────────────────────────────────────
+    def describe_scene(self) -> dict:
+        """Return the skill list + instruction + held state. Free, no step."""
+        return {
+            "success": True,
+            "step": int(self._env._current_step),
+            "instruction": self._env.episode_language_instruction,
+            "skills": self._language_skills,
+            "holding": self._holding,
+            "agent_near": self._near,
+        }
+
+    def navigate(self, target: str) -> dict:
+        out = self._step("nav", target)
+        if out["success"]:
+            self._near = target
+        return out
+
+    def pick(self, obj: str) -> dict:
+        out = self._step("pick", obj)
+        if out["success"]:
+            self._holding = obj
+        return out
+
+    def place(self, obj: str, receptacle: str) -> dict:
+        out = self._step("place", receptacle)
+        if out["success"]:
+            self._holding = None
+        return out
+
+    def open(self, receptacle: str) -> dict:
+        return self._step("open", receptacle)
+
+    def close(self, receptacle: str) -> dict:
+        return self._step("close", receptacle)
+
+
+# ── socket server glue ───────────────────────────────────────────────────
 class _Handler(socketserver.StreamRequestHandler):
-    dispatch: dict[str, Callable[..., dict]]
+    dispatch: dict[str, Callable[..., dict]] = {}
 
     def handle(self) -> None:
         line = self.rfile.readline()
@@ -105,7 +153,7 @@ class _Handler(socketserver.StreamRequestHandler):
             return
         req = json.loads(line.decode())
         method = req.get("method", "")
-        params: dict[str, Any] = req.get("params", {}) or {}
+        params: dict[str, Any] = req.get("params") or {}
         fn = self.dispatch.get(method)
         if fn is None:
             res = {"success": False, "error": f"unknown method: {method}"}
@@ -124,28 +172,23 @@ def serve(sock_path: str) -> None:
     logging.basicConfig(level=os.environ.get("LOG", "INFO"),
                         format="[env %(asctime)s] %(message)s")
 
-    env = EBHabitatEnv()
-    dispatch: dict[str, Callable[..., dict]] = {
-        "describe_scene": env.describe_scene,
-        "navigate": env.navigate,
-        "pick": env.pick,
-        "place": env.place,
-        "open": env.open,
-        "close": env.close,
-        "reset": env.reset,
+    eval_set = os.environ.get("EMBENCH_EVAL_SET", "base")
+    adapter = EBHabitatAdapter(eval_set=eval_set)
+    _Handler.dispatch = {
+        "reset": adapter.reset,
+        "describe_scene": adapter.describe_scene,
+        "navigate": adapter.navigate,
+        "pick": adapter.pick,
+        "place": adapter.place,
+        "open": adapter.open,
+        "close": adapter.close,
     }
 
     if os.path.exists(sock_path):
         os.remove(sock_path)
-
-    class Handler(_Handler):
-        pass
-
-    Handler.dispatch = dispatch
-
-    with socketserver.ThreadingUnixStreamServer(sock_path, Handler) as srv:
+    with socketserver.ThreadingUnixStreamServer(sock_path, _Handler) as srv:
         os.chmod(sock_path, 0o600)
-        log.info("env adapter serving at %s", sock_path)
+        log.info("env adapter serving at %s (eval_set=%s)", sock_path, eval_set)
         srv.serve_forever()
 
 

@@ -31,6 +31,12 @@ results/**/*.log
 results/**/raw/
 wandb/
 
+# Generated protobuf stubs — regen via scripts/codegen.sh (or copied from
+# robonix's proto_gen). Keep out of history since they are mechanical.
+proto_gen/*_pb2.py
+proto_gen/*_pb2_grpc.py
+!proto_gen/__init__.py
+
 .DS_Store
 .idea/
 .vscode/
