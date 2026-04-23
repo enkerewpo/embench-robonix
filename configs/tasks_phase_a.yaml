@@ -1,0 +1,31 @@
+# 20 EB-Habitat tasks for Phase A.
+# We target eval_set "base" — the simplest subset — and pick 20 of its
+# episodes. Episode IDs are indices into the loaded pickle; the exact
+# mapping depends on the dataset file and will be populated once the
+# EB-Habitat install lands on rtx (see runner.py:TODO).
+#
+# Keep this list stable across runs for reproducibility.
+
+eval_set: base
+max_steps: 30
+tasks:
+  - {id: eb_base_000, episode_id: 0}
+  - {id: eb_base_001, episode_id: 1}
+  - {id: eb_base_002, episode_id: 2}
+  - {id: eb_base_003, episode_id: 3}
+  - {id: eb_base_004, episode_id: 4}
+  - {id: eb_base_005, episode_id: 5}
+  - {id: eb_base_006, episode_id: 6}
+  - {id: eb_base_007, episode_id: 7}
+  - {id: eb_base_008, episode_id: 8}
+  - {id: eb_base_009, episode_id: 9}
+  - {id: eb_base_010, episode_id: 10}
+  - {id: eb_base_011, episode_id: 11}
+  - {id: eb_base_012, episode_id: 12}
+  - {id: eb_base_013, episode_id: 13}
+  - {id: eb_base_014, episode_id: 14}
+  - {id: eb_base_015, episode_id: 15}
+  - {id: eb_base_016, episode_id: 16}
+  - {id: eb_base_017, episode_id: 17}
+  - {id: eb_base_018, episode_id: 18}
+  - {id: eb_base_019, episode_id: 19}
