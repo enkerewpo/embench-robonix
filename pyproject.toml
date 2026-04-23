@@ -1,0 +1,24 @@
+[project]
+name = "embench-robonix"
+version = "0.0.1"
+description = "Robonix 2-layer agent on EmbodiedBench EB-Habitat — Phase A validation"
+requires-python = ">=3.10,<3.13"
+
+dependencies = [
+  # MCP server framework — skills expose tools as MCP
+  "mcp[cli]>=1.0",
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff",
+  "pytest",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

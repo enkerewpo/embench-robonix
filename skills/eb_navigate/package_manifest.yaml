@@ -1,0 +1,19 @@
+manifestVersion: 1
+
+build:
+  echo "no-op — python skill, no build step"
+
+start:
+  bash bin/start.sh
+
+package:
+  name: com.embench_robonix.skl.eb_navigate
+  version: 0.0.1
+  vendor: embench_robonix
+  description: EB-Habitat high-level navigation wrapped as a Robonix skill (MCP).
+  license: Apache-2.0
+
+capabilities:
+  - name: embench/skill/navigate
+
+depends: []

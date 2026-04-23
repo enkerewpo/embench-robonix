@@ -1,0 +1,22 @@
+manifestVersion: 1
+
+build:
+  echo "no-op — python skill, no build step"
+
+start:
+  bash bin/start.sh
+
+package:
+  name: com.embench_robonix.skl.eb_manipulate
+  version: 0.0.1
+  vendor: embench_robonix
+  description: EB-Habitat high-level pick/place/open/close as a Robonix skill (MCP).
+  license: Apache-2.0
+
+capabilities:
+  - name: embench/skill/pick
+  - name: embench/skill/place
+  - name: embench/skill/open
+  - name: embench/skill/close
+
+depends: []

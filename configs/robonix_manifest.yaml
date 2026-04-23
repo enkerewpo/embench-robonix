@@ -1,0 +1,34 @@
+# Robonix runtime manifest for the Phase A EB-Habitat run.
+# Pilot + Executor + Atlas are the 5 system services; we declare our three
+# skill packages as embench-robonix-specific skills. The env adapter is NOT
+# a Robonix package — it is a sidecar launched by scripts/run_phase_a.sh.
+
+name: embench-robonix-phase-a
+
+env:
+  LOG: INFO
+  EMBENCH_ENV_SOCKET: /tmp/embench.sock
+
+system:
+  nexus: {}
+  atlas: {}
+  executor: {}
+  pilot:
+    vlm_base_url: https://api.ofox.ai/v1
+    vlm_api_key: ${OPENAI_API_KEY}
+    vlm_api_format: openai
+    vlm_model: gpt-5.4-mini
+  liaison: {}
+
+skills:
+  - package: com.embench_robonix.skl.eb_navigate
+    path: ./skills/eb_navigate
+    name: navigate
+
+  - package: com.embench_robonix.skl.eb_manipulate
+    path: ./skills/eb_manipulate
+    name: manipulate
+
+  - package: com.embench_robonix.skl.eb_observe
+    path: ./skills/eb_observe
+    name: observe

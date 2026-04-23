@@ -1,0 +1,39 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# uv
+uv.lock
+
+# Habitat / EmbodiedBench scene data (big, don't commit)
+data/
+scene_datasets/
+*.glb
+*.ply
+*.obj
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Experiment results — CSV committed, JSONL/raw ignored
+results/**/*.jsonl
+results/**/*.log
+results/**/raw/
+wandb/
+
+.DS_Store
+.idea/
+.vscode/
+*.swp
+.env
+.env.local

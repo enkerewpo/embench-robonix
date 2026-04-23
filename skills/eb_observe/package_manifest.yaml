@@ -1,0 +1,19 @@
+manifestVersion: 1
+
+build:
+  echo "no-op — python skill, no build step"
+
+start:
+  bash bin/start.sh
+
+package:
+  name: com.embench_robonix.skl.eb_observe
+  version: 0.0.1
+  vendor: embench_robonix
+  description: Scene inspection for EB-Habitat — returns receptacles / pickables / agent state. No action steps consumed.
+  license: Apache-2.0
+
+capabilities:
+  - name: embench/skill/describe_scene
+
+depends: []
