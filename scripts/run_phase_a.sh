@@ -60,8 +60,24 @@ trap cleanup EXIT INT TERM
 
 SKILL_PY="$SKILL_VENV/bin/python"
 
+# VLM credentials — single source of truth is the deploy manifest's
+# system.pilot section (vlm_base_url / vlm_api_key / vlm_api_format /
+# vlm_model). Until the pilot-reads-manifest refactor lands, we read them
+# from env vars here and fan out to each consumer (vlm_service reads
+# VLM_*, pilot reads ROBONIX_VLM_* — same values).
+: "${VLM_API_KEY:=${OPENAI_API_KEY:?OPENAI_API_KEY or VLM_API_KEY must be set — this IS the manifest pilot.vlm_api_key value}}"
+: "${VLM_BASE_URL:=${OPENAI_BASE_URL:-https://api.openai.com/v1}}"
+: "${VLM_MODEL:=${OPENAI_MODEL:-gpt-4o-mini}}"
+: "${VLM_MESSAGE_FORMAT:=openai}"
+export VLM_API_KEY VLM_BASE_URL VLM_MODEL VLM_MESSAGE_FORMAT
+
 # 1. Atlas
 spawn atlas "$RBNX_BIN/robonix-atlas"
+sleep 1.5
+
+# 1b. VLM service (system service — registered for pilot to discover under
+#     robonix/srv/cognition/reason). Not a scene service.
+spawn vlm_service "$SKILL_PY" services/vlm_service/vlm_service/service.py
 sleep 1.5
 
 # 2. env_adapter inside embench conda (owns EBHabEnv)
