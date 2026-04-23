@@ -1,0 +1,21 @@
+episode_id,error,final_text,instruction,pilot_ok,steps,success,task_id,turns,wall_s
+0,,,Move one of the pear items to the indicated sofa.,True,5,False,eb_base_000,2,17.95
+1,,,Find a orange on the TV stand and move it to the sink.,True,4,False,eb_base_001,2,10.13
+2,,,Take an pear and transfer it to the allocated left counter.,True,12,False,eb_base_002,2,19.35
+3,,,Find a orange and move it to the right counter.,True,4,False,eb_base_003,2,11.03
+4,,,"On the right counter, I need a toy airplane and a orange.",True,10,False,eb_base_004,2,25.49
+5,,,I left the fridge open. Can you help?,True,2,False,eb_base_005,2,9.92
+6,,,On the TV stand I need you to put a plate.,True,8,False,eb_base_006,2,17.76
+7,,,Detach the strawberry from the right counter.,True,2,False,eb_base_007,2,6.34
+8,,,Bring a banana and a can to the left counter.,True,11,False,eb_base_008,2,27.77
+9,,,"I left my mug on the sofa, can you bring it to the left counter?",True,4,False,eb_base_009,2,12.18
+10,,,Find a toy airplane and move it to the right counter.,True,6,False,eb_base_010,2,12.95
+11,,,"Hey, on the sink, I accidentally left my plate, can you bring it to the right counter?",True,4,False,eb_base_011,2,10.55
+12,,,I need a book on the TV stand. Can you help?,True,3,False,eb_base_012,2,8.23
+13,,,"The fridge door is open because of my mistake. Can you close it, please?",True,2,False,eb_base_013,2,6.17
+14,,,"On the left counter, remove the lego.",True,2,False,eb_base_014,2,9.61
+15,,,The sink needs an hammer and a cup on it.,True,13,False,eb_base_015,2,36.53
+16,,,The rubriks cube is on the right counter but you should move it to the sink.,True,4,False,eb_base_016,2,12.9
+17,,,Put both an rubriks cube and a lid onto the left counter.,True,8,False,eb_base_017,2,20.34
+18,,,Displace the spatula from the sink.,True,2,False,eb_base_018,2,6.71
+19,,,Find a wrench and move it to the left counter.,True,35,False,eb_base_019,2,31.11

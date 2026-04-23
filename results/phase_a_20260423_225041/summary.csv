@@ -1,0 +1,101 @@
+episode_id,error,final_text,instruction,pilot_ok,steps,success,task_id,turns,wall_s
+0,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,Move one of the pear items to the indicated sofa.,False,0,False,eb_base_000,1,0.06
+1,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,Find a orange on the TV stand and move it to the sink.,False,0,False,eb_base_001,1,0.0
+2,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,Take an pear and transfer it to the allocated left counter.,False,0,False,eb_base_002,1,0.0
+3,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,Find a orange and move it to the right counter.,False,0,False,eb_base_003,1,0.0
+4,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,"On the right counter, I need a toy airplane and a orange.",False,0,False,eb_base_004,1,0.0
+5,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,I left the fridge open. Can you help?,False,0,False,eb_base_005,1,0.0
+6,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,On the TV stand I need you to put a plate.,False,0,False,eb_base_006,1,0.0
+7,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,Detach the strawberry from the right counter.,False,0,False,eb_base_007,1,0.0
+8,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,Bring a banana and a can to the left counter.,False,0,False,eb_base_008,1,0.0
+9,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,"I left my mug on the sofa, can you bring it to the left counter?",False,0,False,eb_base_009,1,0.0
+10,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,Find a toy airplane and move it to the right counter.,False,0,False,eb_base_010,1,0.0
+11,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,"Hey, on the sink, I accidentally left my plate, can you bring it to the right counter?",False,0,False,eb_base_011,1,0.01
+12,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,I need a book on the TV stand. Can you help?,False,0,False,eb_base_012,1,0.0
+13,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,"The fridge door is open because of my mistake. Can you close it, please?",False,0,False,eb_base_013,1,0.0
+14,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,"On the left counter, remove the lego.",False,0,False,eb_base_014,1,0.0
+15,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,The sink needs an hammer and a cup on it.,False,0,False,eb_base_015,1,0.0
+16,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))"", grpc_status:13}""
+>",,The rubriks cube is on the right counter but you should move it to the sink.,False,0,False,eb_base_016,1,0.01
+17,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,Put both an rubriks cube and a lid onto the left counter.,False,0,False,eb_base_017,1,0.0
+18,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,Displace the spatula from the sink.,False,0,False,eb_base_018,1,0.0
+19,"<_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = ""ListTools RPC failed: code: 'Unknown error', message: ""h2 protocol error: http2 error"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b"""", FRAME_SIZE_ERROR, Library) }))""
+	debug_error_string = ""UNKNOWN:Error received from peer ipv4:127.0.0.1:50071 {grpc_status:13, grpc_message:""ListTools RPC failed: code: \'Unknown error\', message: \""h2 protocol error: http2 error\"", source: tonic::transport::Error(Transport, hyper::Error(Http2, Error { kind: GoAway(b\""\"", FRAME_SIZE_ERROR, Library) }))""}""
+>",,Find a wrench and move it to the left counter.,False,0,False,eb_base_019,1,0.0
