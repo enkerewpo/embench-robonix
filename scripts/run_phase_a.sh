@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
-# Phase A launcher — real Robonix stack (atlas + pilot + executor)
-# driving EB-Habitat tasks through 3 skill MCP servers.
+# Phase A launcher — real Robonix stack driving EB-Habitat via 3 skill MCP servers.
 #
-# Prereq on rtx:
-#   - robonix-embench repo built: ~/robonix-embench/rust/target/release/{robonix-atlas,robonix-pilot,robonix-executor,rbnx}
-#   - `embench` conda env with EmbodiedBench + habitat-sim installed
-#   - scripts/codegen.sh already run once (populates proto_gen/)
+# Python environment layout (rtx):
+#   conda `embench` (py3.9) — env_adapter ONLY (habitat-sim pins py3.9)
+#   ~/embench-robonix/.venv (py3.12, uv) — skills + runner (mcp>=1.0 needs 3.10+)
 #
-# Env vars:
-#   ROBONIX_SRC        (default: ~/robonix-embench)
-#   ROBONIX_ATLAS      (default: 127.0.0.1:50051)
-#   EMBENCH_EVAL_SET   (default: base)
-#   EMBENCH_ENV_SOCKET (default: /tmp/embench.sock)
-#   OUT_DIR            (default: results/phase_a_$ts)
+# Run from repo root on rtx:
+#   source ~/anaconda3/etc/profile.d/conda.sh
+#   bash scripts/run_phase_a.sh
 set -euo pipefail
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -25,31 +20,29 @@ cd "$HERE"
 : "${EMBENCH_EVAL_SET:=base}"
 : "${EMBENCH_ENV_SOCKET:=/tmp/embench.sock}"
 : "${OUT_DIR:=results/phase_a_$(date +%Y%m%d_%H%M%S)}"
-export ROBONIX_ATLAS ROBONIX_PILOT_PORT ROBONIX_PILOT_ADDR EMBENCH_EVAL_SET EMBENCH_ENV_SOCKET OUT_DIR
+export ROBONIX_ATLAS ROBONIX_PILOT_PORT ROBONIX_PILOT_ADDR \
+       EMBENCH_EVAL_SET EMBENCH_ENV_SOCKET OUT_DIR
 
 RBNX_BIN="$ROBONIX_SRC/rust/target/release"
 for b in robonix-atlas robonix-pilot robonix-executor; do
   [ -x "$RBNX_BIN/$b" ] || { echo "missing $RBNX_BIN/$b — cargo build first"; exit 1; }
 done
 
+SKILL_VENV="$HERE/.venv"
+[ -x "$SKILL_VENV/bin/python" ] || { echo "$SKILL_VENV missing — create via uv venv"; exit 1; }
+
 mkdir -p "$OUT_DIR"
 
-# Activate conda env (habitat-sim etc.)
-source "$HOME/anaconda3/etc/profile.d/conda.sh"
-conda activate embench
-
-# Also ensure embench-robonix deps (mcp, grpcio, etc.) are in the conda env.
-pip show mcp >/dev/null 2>&1 || pip install "mcp[cli]>=1.0" grpcio grpcio-tools
-
-# Make embench_robonix importable + put proto_gen on sys.path for skills
-export PYTHONPATH="$HERE/src:$HERE/proto_gen:${PYTHONPATH:-}"
-
-# Regen proto stubs if missing
-if [ ! -f proto_gen/robonix_runtime_pb2.py ]; then
-  bash scripts/codegen.sh
+# Regen proto stubs into proto_gen/ if missing (use skill venv which has grpcio-tools)
+if [ ! -f "$HERE/proto_gen/robonix_runtime_pb2.py" ]; then
+  echo "[run_phase_a] proto_gen/ empty — copy from a robonix package for now"
+  echo "[run_phase_a] (upstream: rust/examples/packages/maniskill_vla_demo/proto_gen/)"
 fi
 
-# ── Process tracking ──────────────────────────────────────────────────────
+# Compose PYTHONPATH (same for every process)
+export PYTHONPATH="$HERE/src:$HERE/proto_gen:${PYTHONPATH:-}"
+
+# ── process tracking ──────────────────────────────────────────────────────
 declare -a PIDS=()
 spawn() {
   local name="$1"; shift
@@ -59,40 +52,41 @@ spawn() {
 }
 cleanup() {
   echo "[run_phase_a] shutting down ..."
-  for pid in "${PIDS[@]}"; do
-    kill "$pid" 2>/dev/null || true
-  done
+  for pid in "${PIDS[@]}"; do kill "$pid" 2>/dev/null || true; done
   wait 2>/dev/null || true
   rm -f "$EMBENCH_ENV_SOCKET"
 }
 trap cleanup EXIT INT TERM
 
-# 1. Atlas (capability registry)
+SKILL_PY="$SKILL_VENV/bin/python"
+
+# 1. Atlas
 spawn atlas "$RBNX_BIN/robonix-atlas"
 sleep 1.5
 
-# 2. Env adapter sidecar (owns the EBHabEnv instance)
-spawn env_adapter python -m embench_robonix.env_adapter
-# wait for UNIX socket up (env loading can take ~30s)
+# 2. env_adapter inside embench conda (owns EBHabEnv)
+spawn env_adapter conda run -n embench --live-stream python -m embench_robonix.env_adapter
+# Wait up to 120s for socket to appear (habitat-sim init is slow).
 for _ in $(seq 1 120); do
   [ -S "$EMBENCH_ENV_SOCKET" ] && break
   sleep 1
 done
-[ -S "$EMBENCH_ENV_SOCKET" ] || { echo "env_adapter never came up"; exit 1; }
+[ -S "$EMBENCH_ENV_SOCKET" ] || { echo "env_adapter did not come up"; exit 1; }
+echo "[run_phase_a] env_adapter ready"
 
-# 3. Skill MCP servers (each registers its tools to atlas + starts HTTP MCP)
-spawn eb_navigate python skills/eb_navigate/src/skill.py
-spawn eb_manipulate python skills/eb_manipulate/src/skill.py
-spawn eb_observe python skills/eb_observe/src/skill.py
+# 3. Skill MCP servers in uv venv (py3.12)
+spawn eb_navigate "$SKILL_PY" skills/eb_navigate/src/skill.py
+spawn eb_manipulate "$SKILL_PY" skills/eb_manipulate/src/skill.py
+spawn eb_observe "$SKILL_PY" skills/eb_observe/src/skill.py
 sleep 2
 
-# 4. Pilot + Executor
+# 4. Pilot + Executor (rust binaries)
 spawn pilot "$RBNX_BIN/robonix-pilot"
 spawn executor "$RBNX_BIN/robonix-executor"
 sleep 2
 
-# 5. Runner drives 20 tasks through the stack
-python -m embench_robonix.runner \
+# 5. Runner (uv venv) drives the tasks through pilot
+"$SKILL_PY" -m embench_robonix.runner \
   --tasks configs/tasks_phase_a.yaml \
   --out "$OUT_DIR"
 
