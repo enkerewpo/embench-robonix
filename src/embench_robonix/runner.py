@@ -77,16 +77,17 @@ def _submit_task_to_pilot(pilot_addr: str, instruction: str,
     turn_count = 0
     t0 = time.perf_counter()
 
-    # event_kind: 1=text_chunk 2=task_graph 3=batch_result 4=status 5=final_text
+    # event_kind matches pilot's pilot_wire constants:
+    # 0=text_chunk 1=task_graph 2=batch_result 3=status 4=final_text
     graphs: list[list[dict]] = []  # one per emitted TaskGraph, list of ToolCall
     try:
         for ev in stub.Stream(task, timeout=timeout_s):
             kind = int(ev.event_kind)
             row: dict = {"kind": kind, "session_id": ev.session_id}
-            if kind == 1:  # text_chunk — planner's free text (reasoning, etc.)
+            if kind == 0:  # text_chunk — planner's free text (reasoning, etc.)
                 if ev.text_chunk:
                     row["text"] = ev.text_chunk
-            elif kind == 2:  # task_graph
+            elif kind == 1:  # task_graph
                 calls = []
                 for c in ev.task_graph.calls:
                     calls.append({
@@ -98,7 +99,7 @@ def _submit_task_to_pilot(pilot_addr: str, instruction: str,
                 row["round"] = int(ev.task_graph.round)
                 row["calls"] = calls
                 graphs.append(calls)
-            elif kind == 3:  # batch_result
+            elif kind == 2:  # batch_result
                 turn_count += 1
                 br = ev.batch_result
                 row["batch_ok"] = not br.any_failed
@@ -108,14 +109,14 @@ def _submit_task_to_pilot(pilot_addr: str, instruction: str,
                      "success": r.success, "output": r.output[:400], "error": r.error[:200]}
                     for r in br.results
                 ]
-            elif kind == 4:  # status
+            elif kind == 3:  # status
                 row["state"] = int(ev.status.state)
                 row["msg"] = ev.status.message
                 events.append(row)
                 if int(ev.status.state) >= 2:
                     break
                 continue
-            elif kind == 5:  # final_text
+            elif kind == 4:  # final_text
                 final_text = ev.final_text
                 row["final_text"] = final_text
             events.append(row)
@@ -139,6 +140,9 @@ def run_one_task(task: dict, env_sock: str, pilot_addr: str,
                           {"episode_id": task.get("episode_id")})
     instruction = reset_res.get("instruction", "")
     log.info("[task %s] instruction: %s", tid, instruction)
+    # Per-task RGB frame capture — task #29.
+    frame_dir = out_dir / f"task_{tid}" / "frames"
+    _env_call(env_sock, "set_frame_dir", {"path": str(frame_dir)})
 
     session_id = f"embench-{tid}"
     t0 = time.perf_counter()

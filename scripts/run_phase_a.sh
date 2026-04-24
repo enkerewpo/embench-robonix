@@ -103,9 +103,11 @@ spawn pilot "$RBNX_BIN/robonix-pilot"
 spawn executor "$RBNX_BIN/robonix-executor"
 sleep 2
 
-# 5. Runner (uv venv) drives the tasks through pilot
+# 5. Runner (uv venv) drives the tasks through pilot. Tee so report_phase_a.py
+# can bucket executor.log dispatches into per-task windows.
+: "${TASKS_YAML:=configs/tasks_phase_a.yaml}"
 "$SKILL_PY" -m embench_robonix.runner \
-  --tasks configs/tasks_phase_a.yaml \
-  --out "$OUT_DIR"
+  --tasks "$TASKS_YAML" \
+  --out "$OUT_DIR" 2>&1 | tee "$OUT_DIR/runner.log"
 
 echo "results: $OUT_DIR/summary.csv"

@@ -71,7 +71,6 @@ def main() -> None:
             "path": str(_CAPABILITY_MD),
             "metadata": {"disable_model_invocation": False, "free_call": True},
         }],
-        contract_id="robonix/skill/embench/observe/tools",
         mcp_instance=_mcp,
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_observe")

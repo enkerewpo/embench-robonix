@@ -22,6 +22,8 @@ import logging
 import os
 import socketserver
 import threading
+import time
+from pathlib import Path
 from typing import Any, Callable
 
 log = logging.getLogger("embench.env")
@@ -44,6 +46,13 @@ class EBHabitatAdapter:
         # cache skill table for lookup
         self._skills: list[tuple[str, list]] = list(self._env.skill_set)
         self._language_skills: list[str] = list(self._env.language_skill_set)
+        # Per-task frame capture state. Runner sets dir via set_frame_dir
+        # after each reset; _step captures a post-action frame + appends a
+        # sidecar JSONL record so trajectory analysis can line up images
+        # with tool calls.
+        self._frame_dir: Path | None = None
+        self._frame_idx: int = 0
+        self._frame_meta_fp = None
         log.info("EBHabEnv ready — %d episodes, %d skills",
                  self._n_episodes, len(self._skills))
 
@@ -107,18 +116,105 @@ class EBHabitatAdapter:
                 best_s, best_i = s, i
         return best_i if best_s >= max(1, len(t_tokens) - 1) else None
 
+    # ── frame capture (task #29) ─────────────────────────────────────────
+    def set_frame_dir(self, path: str) -> dict:
+        """Runner calls this right after reset(): per-task output dir.
+
+        Adapter creates `<path>/frames.jsonl` + saves `NNN_<op>_<tgt>.jpg`
+        into `<path>/` on every _step call. Set path to empty string to
+        disable capture.
+        """
+        if self._frame_meta_fp is not None:
+            try:
+                self._frame_meta_fp.close()
+            except Exception:
+                pass
+            self._frame_meta_fp = None
+        self._frame_idx = 0
+        if not path:
+            self._frame_dir = None
+            return {"success": True, "capturing": False}
+        d = Path(path)
+        d.mkdir(parents=True, exist_ok=True)
+        self._frame_dir = d
+        self._frame_meta_fp = open(d / "frames.jsonl", "a", buffering=1)
+        return {"success": True, "capturing": True, "dir": str(d)}
+
+    def _render_rgb(self):
+        """Best-effort RGB capture. Returns ndarray (H,W,3) or None."""
+        env = self._env
+        for fn in (lambda: env.render(mode="rgb_array"),
+                   lambda: env.render("rgb_array"),
+                   lambda: env.render()):
+            try:
+                arr = fn()
+                if arr is None:
+                    continue
+                # habitat occasionally returns a dict {'rgb': ndarray}
+                if isinstance(arr, dict):
+                    arr = arr.get("rgb") or arr.get("color_sensor")
+                    if arr is None:
+                        continue
+                return arr
+            except Exception:
+                continue
+        # fallback: ask the sim directly
+        try:
+            sim = getattr(env, "_sim", None) or getattr(env, "sim", None)
+            if sim is not None and hasattr(sim, "get_observations"):
+                obs = sim.get_observations()
+                return obs.get("rgb") or obs.get("color_sensor")
+        except Exception:
+            pass
+        return None
+
+    def _capture(self, op: str, target: str, result: dict) -> None:
+        if self._frame_dir is None:
+            return
+        try:
+            arr = self._render_rgb()
+            if arr is None:
+                log.warning("frame capture: no RGB available (op=%s)", op)
+                return
+            # drop alpha if present
+            if hasattr(arr, "shape") and len(arr.shape) == 3 and arr.shape[2] == 4:
+                arr = arr[..., :3]
+            from PIL import Image  # lazy import, keeps cold start fast
+            safe_tgt = "".join(c if c.isalnum() else "_" for c in (target or ""))[:48]
+            fname = f"{self._frame_idx:03d}_{op}_{safe_tgt}.jpg"
+            Image.fromarray(arr).save(self._frame_dir / fname, quality=85)
+            if self._frame_meta_fp is not None:
+                self._frame_meta_fp.write(json.dumps({
+                    "idx": self._frame_idx,
+                    "ts": time.time(),
+                    "op": op,
+                    "target": target,
+                    "frame": fname,
+                    "step": int(self._env._current_step),
+                    "success": bool(result.get("success")),
+                    "reward": float(result.get("reward", 0.0)),
+                    "task_success": bool(self._task_success),
+                    "env_feedback": result.get("env_feedback"),
+                }) + "\n")
+        except Exception as e:
+            log.warning("frame capture failed (op=%s): %s", op, e)
+        finally:
+            self._frame_idx += 1
+
     def _step(self, op: str, target: str) -> dict:
         if self._reset_needed:
             self._env.reset()
             self._reset_needed = False
         idx = self._skill_index_for(op, target)
         if idx is None:
-            return {"success": False, "step": self._env._current_step,
-                    "error": f"no skill matching {op!r} target={target!r}"}
+            res = {"success": False, "step": self._env._current_step,
+                   "error": f"no skill matching {op!r} target={target!r}"}
+            self._capture(op, target, res)
+            return res
         obs, reward, done, info = self._env.step(idx)
         success = bool(info.get("task_success", False) or reward >= 1.0)
         self._task_success = self._task_success or success
-        return {
+        res = {
             "success": not info.get("was_prev_action_invalid", False),
             "step": int(self._env._current_step),
             "reward": float(reward),
@@ -126,6 +222,8 @@ class EBHabitatAdapter:
             "task_success": bool(self._task_success),
             "env_feedback": info.get("env_feedback") or info.get("action"),
         }
+        self._capture(op, target, res)
+        return res
 
     # ── RPC methods ──────────────────────────────────────────────────────
     def describe_scene(self) -> dict:
@@ -237,6 +335,7 @@ def serve(sock_path: str) -> None:
     adapter = EBHabitatAdapter(eval_set=eval_set)
     _Handler.dispatch = {
         "reset": adapter.reset,
+        "set_frame_dir": adapter.set_frame_dir,
         "describe_scene": adapter.describe_scene,
         "navigate": adapter.navigate,
         "pick": adapter.pick,

@@ -121,7 +121,6 @@ def main() -> None:
                 },
             },
         ],
-        contract_id="robonix/skill/embench/manipulate/tools",
         mcp_instance=_mcp,
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_manipulate")

@@ -194,12 +194,18 @@ def main() -> None:
 
             tool_calls = []
             for tc in getattr(m, "tool_calls", []) or []:
+                # Claude-via-OpenAI-compat returns empty args as "" which fails
+                # re-serialisation ("invalid JSON" 500) on round-trip. Normalise
+                # to "{}" so it's always parseable as an empty JSON object.
+                args = tc.arguments_json or "{}"
+                if args.strip() == "":
+                    args = "{}"
                 tool_calls.append({
                     "id": tc.id,
                     "type": "function",
                     "function": {
                         "name": tc.name,
-                        "arguments": tc.arguments_json,
+                        "arguments": args,
                     },
                 })
             if tool_calls:
@@ -370,11 +376,19 @@ def main() -> None:
 
         for idx in sorted(tc_acc.keys()):
             tc = tc_acc[idx]
+            # Claude via OpenAI-compat gateway sometimes yields empty "" args
+            # (model called the tool but emitted no JSON body); normalise to
+            # "{}" so downstream dispatch gets a valid empty object instead
+            # of "". Pydantic "field required" failures on our skill side
+            # happen when this is not done and the tool has required params.
+            args = (tc["arguments"] or "").strip()
+            if not args:
+                args = "{}"
             yield vlm_pb2.ChatStreamEvent(
                 tool_call=robonix_msg_pb2.ToolCall(
                     id=tc["id"],
                     name=tc["name"],
-                    arguments_json=tc["arguments"],
+                    arguments_json=args,
                 )
             )
 

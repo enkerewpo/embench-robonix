@@ -79,7 +79,6 @@ def main() -> None:
             },
             "metadata": {"tool": "navigate", "env": "eb_habitat"},
         }],
-        contract_id="robonix/skill/embench/navigate/tools",
         mcp_instance=_mcp,
     )
     start_heartbeat(stub, "com.embench_robonix.skl.eb_navigate")

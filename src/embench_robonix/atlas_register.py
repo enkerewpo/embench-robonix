@@ -50,17 +50,14 @@ def register(
     capability_namespace: str,
     mcp_port: int,
     skills: list[dict],
-    contract_id: str = "",
     mcp_instance=None,
 ) -> "object":
     """Register this process with atlas. Returns the gRPC stub for heartbeat use.
 
-    ``skills`` is the planner-facing SkillInfo list (name + description +
-    path to CAPABILITY.md). Separately, the interface metadata must carry
-    the live MCP tool schemas so executor's ``load_mcp_tools`` can dispatch
-    — it reads ``endpoint`` + ``tools[]`` out of ``metadata_json``.
-    Pass ``mcp_instance`` to have this helper introspect the FastMCP server
-    for its live tool list (preferred). Falls back to ``skills`` if not.
+    Every entry in ``skills`` is its own capability — each one becomes a
+    separate DeclareInterface call with ``contract_id`` =
+    ``{capability_namespace}/{skill['name']}`` unless the entry overrides
+    via ``skill['contract_id']``. No ``tools``-bundled interface.
     """
     import grpc
     pb, pb_grpc = _import_proto()
@@ -86,32 +83,26 @@ def register(
         skills=skill_pbs,
     ))
 
-    # Build the tool catalogue the executor expects: [{name, description,
-    # input_schema}]. Use ONLY the short description + minimal schema so the
-    # aggregated ListTools response stays within HTTP/2 frame size (16 KB).
-    # Any longer planner-facing docs live in CAPABILITY.md (skill.path) —
-    # Pilot reads those via read_file when it needs detail.
-    mcp_tools: list[dict] = [{
-        "name": s["name"],
-        "description": (s.get("description", "") or "")[:240],
-        "input_schema": s.get("input_schema",
-                              {"type": "object", "properties": {},
-                               "additionalProperties": True}),
-    } for s in skills]
-
-    iface_meta = {
-        "endpoint": f"http://127.0.0.1:{mcp_port}/mcp",
-        "tools": mcp_tools,
-    }
-
-    stub.DeclareInterface(pb.DeclareInterfaceRequest(
-        node_id=node_id,
-        name="mcp_tools",
-        supported_transports=["mcp"],
-        metadata_json=json.dumps(iface_meta),
-        listen_port=mcp_port,
-        contract_id=contract_id or f"{capability_namespace}/tools",
-    ))
+    endpoint = f"http://127.0.0.1:{mcp_port}/mcp"
+    for s in skills:
+        cid = s.get("contract_id") or f"{capability_namespace}/{s['name']}"
+        iface_meta = {
+            "endpoint": endpoint,
+            "tool_name": s["name"],
+            "description": (s.get("description", "") or "")[:240],
+            "input_schema": s.get(
+                "input_schema",
+                {"type": "object", "properties": {}, "additionalProperties": True},
+            ),
+        }
+        stub.DeclareInterface(pb.DeclareInterfaceRequest(
+            node_id=node_id,
+            name=s["name"],
+            supported_transports=["mcp"],
+            metadata_json=json.dumps(iface_meta),
+            listen_port=mcp_port,
+            contract_id=cid,
+        ))
     return stub
 
 
