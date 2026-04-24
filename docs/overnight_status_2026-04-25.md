@@ -37,10 +37,28 @@ processes in uninterruptible D-state holding a GPU driver rwlock
   socket-ready, never coming up.
 - `kill -9` does not release D-state processes.
 
-**Fix**: reboot rtx (`sudo reboot`), then retry with `resolution=256` in
-the EB native invocation. Smoke test #2 with `resolution=256` did NOT hit
-CubeMap — that's the correct setting to use. `scripts/overnight_compare.sh`
-needs a one-line patch to add `resolution=256` to the EB hydra command.
+**Fix options (ranked, safest first)**:
+
+1. **Wait.** The locked rwlock is in `nvidia-modeset`, not core CUDA or
+   `nvidia-uvm`. zzb's vLLM (CUDA-only, no EGL) is still serving fine.
+   If zzb finishes and no one else is rendering, a sysadmin can do
+   `rmmod nvidia_drm nvidia_modeset && modprobe nvidia_modeset nvidia_drm`
+   to clear the stuck lock without a full reboot. This does kill anyone
+   currently using X/rendering on rtx, so coordinate first.
+
+2. **Wait for maintenance window**, then full `sudo reboot`. Cleanest
+   but kills all running jobs including zzb's vLLM — needs agreement.
+
+3. **DO NOT** attempt more habitat runs in the meantime. Each attempt
+   that touches habitat-sim becomes another D-state process holding
+   another slice of the same rwlock, and the more that pile up the
+   higher the risk the lock cascades into a fully global driver wedge
+   that would also kill zzb's vLLM. Three D zombies already exist
+   (pids 2031557, 2073940, 2134838 as of 2026-04-25 02:10).
+
+Once unwedged, `scripts/overnight_compare.sh` is ready to run as-is
+(already pins `resolution=256` for the EB-native invocation, which is
+what avoided the CubeMap crash in smoke test #2).
 
 ## Once GPU is back — kickoff recipe
 
