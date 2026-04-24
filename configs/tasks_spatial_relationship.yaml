@@ -1,0 +1,31 @@
+# 20 EB-Habitat tasks from the 'spatial_relationship' eval set — Phase A extension.
+# Mirrors tasks_phase_a.yaml (base). EMBENCH_EVAL_SET must match the
+# eval_set field below when invoking run_phase_a.sh.
+#
+# Paper (EmbodiedBench Table 2) reports on 50 episodes/subset; we use
+# the first 20 to keep one pass tractable. Same episode IDs across runs
+# so SR comparisons are on the exact same task set.
+
+eval_set: spatial_relationship
+max_steps: 30
+tasks:
+  - {id: eb_spatial_relationship_000, episode_id: 0}
+  - {id: eb_spatial_relationship_001, episode_id: 1}
+  - {id: eb_spatial_relationship_002, episode_id: 2}
+  - {id: eb_spatial_relationship_003, episode_id: 3}
+  - {id: eb_spatial_relationship_004, episode_id: 4}
+  - {id: eb_spatial_relationship_005, episode_id: 5}
+  - {id: eb_spatial_relationship_006, episode_id: 6}
+  - {id: eb_spatial_relationship_007, episode_id: 7}
+  - {id: eb_spatial_relationship_008, episode_id: 8}
+  - {id: eb_spatial_relationship_009, episode_id: 9}
+  - {id: eb_spatial_relationship_010, episode_id: 10}
+  - {id: eb_spatial_relationship_011, episode_id: 11}
+  - {id: eb_spatial_relationship_012, episode_id: 12}
+  - {id: eb_spatial_relationship_013, episode_id: 13}
+  - {id: eb_spatial_relationship_014, episode_id: 14}
+  - {id: eb_spatial_relationship_015, episode_id: 15}
+  - {id: eb_spatial_relationship_016, episode_id: 16}
+  - {id: eb_spatial_relationship_017, episode_id: 17}
+  - {id: eb_spatial_relationship_018, episode_id: 18}
+  - {id: eb_spatial_relationship_019, episode_id: 19}
